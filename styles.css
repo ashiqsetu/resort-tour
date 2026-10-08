@@ -1,0 +1,711 @@
+/* ============================================================
+   The Palace Luxury Resort — styles.css
+   Photo-map diorama · always-visible pin pills · no pin motion
+   ============================================================ */
+
+:root {
+  --ink: #173042;
+  --ink-soft: rgba(23, 48, 66, 0.68);
+  --paper: #ffffff;
+  --glass: rgba(255, 255, 255, 0.88);
+  --line: rgba(23, 48, 66, 0.16);
+  --serif: "Cormorant Garamond", Georgia, serif;
+  --sans: "Jost", "Segoe UI", sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: #bfe0ee;
+  font-family: var(--sans);
+  color: var(--ink);
+  overscroll-behavior: none;
+}
+
+/* ---------- 3D canvas ---------- */
+#scene {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  z-index: 0;
+  touch-action: none;
+}
+
+/* ---------- Loader ---------- */
+#loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: linear-gradient(165deg, #f6fbff 0%, #dcf0fa 55%, #c2e2f0 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+  transition: opacity 0.8s ease, visibility 0.8s ease;
+}
+#loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+.loader-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: #0e6a8e;
+}
+.loader-title {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(40px, 7vw, 74px);
+  color: var(--ink);
+}
+.loader-bar {
+  width: min(320px, 60vw);
+  height: 2px;
+  background: rgba(23, 48, 66, 0.15);
+  overflow: hidden;
+}
+#loader-fill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: #0e86ad;
+  transition: width 0.35s ease;
+}
+#loader-status {
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* ---------- Pins: photo-style label pills, always shown ---------- */
+#pins {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+.pin {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  pointer-events: auto;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  padding: 0;
+  will-change: transform;
+  filter: drop-shadow(0 2px 4px rgba(10, 30, 45, 0.35));
+}
+body.is-detail .pin { opacity: 0.14 !important; pointer-events: none; }
+body.is-detail .pin.active { opacity: 1 !important; }
+
+/* icon badge (teardrop circle like the reference) */
+.pin-badge {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--pin-color, #0e86ad);
+  border: 2px solid #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+}
+/* tail under the badge pointing at the spot */
+.pin-badge::after {
+  content: "";
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  background: var(--pin-color, #0e86ad);
+  transform: translateX(-50%) rotate(45deg);
+  border-radius: 0 0 3px 0;
+  z-index: -1;
+}
+
+/* name pill (right of badge) */
+.pin-pill {
+  background: var(--pin-color, #0e86ad);
+  color: #ffffff;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 7px 14px 7px 10px;
+  margin-left: -8px;
+  border-radius: 3px 17px 17px 3px;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* ---------- HUD ---------- */
+#hud {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px clamp(20px, 4vw, 48px);
+  pointer-events: none;
+}
+#hud .hud-right { pointer-events: auto; }
+
+.brand {
+  font-size: 14px;
+  letter-spacing: 0.4em;
+  font-weight: 500;
+  color: #0e4a63;
+}
+.brand span { color: #0e86ad; margin: 0 5px; }
+.hud-hint {
+  margin-top: 7px;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.btn-ghost {
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 12px 20px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--ink);
+  backdrop-filter: blur(8px);
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+.btn-ghost:hover { border-color: #0e86ad; transform: translateY(-1px); }
+
+/* ---------- Tour bar & hint ---------- */
+#tour-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 40px;
+  transform: translateX(-50%);
+  width: min(360px, 60vw);
+  height: 3px;
+  background: rgba(23, 48, 66, 0.18);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 20;
+  pointer-events: none;
+}
+#tour-fill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: #0e86ad;
+}
+#tour-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 20;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+body.tour-mode #tour-bar,
+body.tour-mode #tour-hint { opacity: 1; }
+body.tour-mode .hud-hint { opacity: 0; }
+body.tour-mode #btn-tour { display: none; }
+
+/* ---------- Detail card ---------- */
+#detail {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+#detail-info {
+  position: absolute;
+  right: clamp(18px, 4vw, 64px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(390px, 86vw);
+  padding: 28px 26px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--pin-color, #0e86ad);
+  border-radius: 6px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 18px 48px rgba(10, 40, 60, 0.18);
+  opacity: 0;
+  translate: 0 24px;
+  transition: opacity 0.5s ease, translate 0.5s ease;
+  pointer-events: none;
+}
+body.is-detail #detail-info {
+  opacity: 1;
+  translate: 0 0;
+  pointer-events: auto;
+}
+#detail-info h2 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(28px, 3.4vw, 42px);
+  margin-bottom: 8px;
+}
+#detail-desc {
+  color: var(--ink-soft);
+  line-height: 1.7;
+  font-size: 15px;
+}
+.detail-meta {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+  font-size: 13px;
+}
+.meta-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--pin-color, #0e86ad);
+  margin-bottom: 2px;
+}
+.detail-note {
+  margin-top: 16px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+#detail-close {
+  position: absolute;
+  top: 92px;
+  right: clamp(18px, 4vw, 64px);
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 11px 18px;
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.5s ease 0.12s, border-color 0.25s ease;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}
+body.is-detail #detail-close { opacity: 1; pointer-events: auto; }
+#detail-close:hover { border-color: #0e86ad; }
+
+.btn-solid {
+  margin-top: 20px;
+  width: 100%;
+  padding: 13px 0;
+  background: var(--ink);
+  color: #fff;
+  border: 0;
+  border-radius: 4px;
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.25s ease;
+}
+.btn-solid:hover { background: #0c2331; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 760px) {
+  #hud { padding: 16px 18px; }
+  .pin-pill { font-size: 11px; padding: 5px 10px 5px 8px; }
+  .pin-badge { width: 28px; height: 28px; font-size: 13px; }
+  #detail-info {
+    right: 50%;
+    transform: translateX(50%);
+    top: auto;
+    bottom: 16px;
+    width: min(560px, calc(100vw - 24px));
+    padding: 20px 16px;
+  }
+  #detail-close { top: 68px; right: 50%; transform: translateX(50%); }
+  #tour-hint { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #loader, #detail-info, #detail-close { transition: none; }
+}
+
+/* ============================================================
+   360° Beach Club panorama — cloud sweep · falling man · HUD
+   ============================================================ */
+
+/* ---------- pano HUD ---------- */
+#pano-hud {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+#pano-hud.active { opacity: 1; visibility: visible; }
+
+#pano-back {
+  position: absolute;
+  top: 24px;
+  right: clamp(18px, 4vw, 64px);
+  pointer-events: auto;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 11px 18px;
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 0.25s ease;
+}
+#pano-back:hover { border-color: #0e86ad; }
+
+#pano-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  white-space: nowrap;
+}
+#pano-hint b { color: #ffffff; }
+
+/* map chrome hides while the 360° flow owns the screen */
+body.is-pano #pins,
+body.is-pano #hud,
+body.is-pano #tour-bar,
+body.is-pano #tour-hint {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ---------- cloud banks (sweep in from left & right) ---------- */
+#cloud-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  pointer-events: none;
+}
+.cloud-bank {
+  position: absolute;
+  left: -7.5vw;
+  width: 115vw;
+  height: 46vh;
+  opacity: 0;
+  will-change: transform, opacity;
+  /* painted-cumulus SVG is set inline from app.js; a real photo from
+     ./clouds/cloud-N.png replaces it automatically when present */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.cloud-left  { transform: translateX(-112%); }
+.cloud-right { transform: translateX(112%); }
+.cloud-bank:nth-child(3n) { rotate: 1.6deg; }
+.cloud-bank:nth-child(4n) { rotate: -1.2deg; }
+
+/* ---------- on-screen notice ---------- */
+.pano-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 72px;
+  transform: translateX(-50%);
+  z-index: 70;
+  padding: 12px 20px;
+  background: rgba(23, 48, 66, 0.92);
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+/* ---------- landing dust puff ---------- */
+.pano-dust {
+  position: fixed;
+  left: 50%;
+  top: 58%;
+  width: 46vmin;
+  height: 18vmin;
+  margin-left: -23vmin;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center,
+    rgba(242, 230, 204, 0.85) 0%,
+    rgba(242, 230, 204, 0) 68%);
+  z-index: 65;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+@media (max-width: 760px) {
+  #pano-hint { font-size: 9.5px; letter-spacing: 0.12em; }
+  #pano-back { top: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #pano-hud { transition: none; }
+}
+
+/* ============================================================
+   Villas walk-through — direction chips · nav arrow · doors
+   ============================================================ */
+
+#villa-hud {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+#villa-hud.active { opacity: 1; visibility: visible; }
+
+#villa-back {
+  position: absolute;
+  top: 24px;
+  right: clamp(18px, 4vw, 64px);
+  pointer-events: auto;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 11px 18px;
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 0.25s ease;
+}
+#villa-back:hover { border-color: #0e86ad; }
+
+#villa-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  white-space: nowrap;
+}
+#villa-hint b { color: #ffffff; }
+
+/* ---------- direction-point chips (Google-Maps-style) ---------- */
+#villa-chips {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+}
+.villa-chip {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+  cursor: pointer;
+  border: 0;
+  padding: 9px 16px 9px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  box-shadow: 0 6px 18px rgba(10, 30, 45, 0.30);
+  animation: villa-chip-in 0.45s cubic-bezier(.2, .9, .3, 1.2) backwards;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.villa-chip:hover { transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 10px 26px rgba(10, 30, 45, 0.40); }
+.villa-chip:active { transform: translate(-50%, -50%) scale(0.96); }
+@keyframes villa-chip-in {
+  from { opacity: 0; scale: 0.6; }
+  to   { opacity: 1; scale: 1; }
+}
+.villa-chip-arrow {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #0e86ad;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+}
+.villa-chip.is-door .villa-chip-arrow { background: #b45309; }
+.villa-chip-door { font-size: 14px; }
+
+/* ---------- the big marching navigation arrow ---------- */
+#villa-nav {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+#villa-nav.active { opacity: 1; visibility: visible; }
+
+.villa-nav-arrow {
+  display: flex;
+  gap: 10px;
+  rotate: 0deg;
+  transition: rotate 0.4s ease;
+  filter: drop-shadow(0 10px 24px rgba(10, 40, 60, 0.45));
+}
+#villa-nav.dir-left   .villa-nav-arrow { rotate: -90deg; }
+#villa-nav.dir-right  .villa-nav-arrow { rotate: 90deg; }
+#villa-nav.dir-back   .villa-nav-arrow { rotate: 180deg; }
+.villa-nav-arrow span {
+  width: 54px;
+  height: 54px;
+  background: #0e86ad;
+  clip-path: polygon(50% 0, 100% 100%, 72% 100%, 50% 55%, 28% 100%, 0 100%);
+  opacity: 0.25;
+  animation: villa-march 1.05s linear infinite;
+}
+.villa-nav-arrow span:nth-child(2) { animation-delay: 0.16s; }
+.villa-nav-arrow span:nth-child(3) { animation-delay: 0.32s; }
+@keyframes villa-march {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  20%           { opacity: 1;    transform: translateY(-12px); }
+}
+
+.villa-nav-label {
+  position: absolute;
+  left: 50%;
+  bottom: 21%;
+  transform: translateX(-50%);
+  font-family: var(--serif);
+  font-size: clamp(20px, 3.4vw, 34px);
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(10, 40, 60, 0.65);
+  white-space: nowrap;
+}
+.villa-nav-progress {
+  position: absolute;
+  left: 50%;
+  bottom: 17.5%;
+  transform: translateX(-50%);
+  width: min(340px, 60vw);
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+  overflow: hidden;
+}
+.villa-nav-progress span {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: #0e86ad;
+}
+
+/* ---------- door swings open (double doors parting) ---------- */
+.villa-door {
+  position: fixed;
+  inset: 0;
+  z-index: 58;
+  pointer-events: none;
+  perspective: 1400px;
+  animation: villa-door-gone 0.45s ease 1.05s forwards;
+}
+@keyframes villa-door-gone { to { opacity: 0; visibility: hidden; } }
+.villa-door-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50.6%;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.10), rgba(0, 0, 0, 0.22)),
+    repeating-linear-gradient(90deg, #4a3524 0 84px, #3d2c1e 84px 86px);
+  box-shadow: inset 0 0 90px rgba(0, 0, 0, 0.55);
+  transition: transform 1.05s cubic-bezier(.6, .05, .3, 1);
+  backface-visibility: hidden;
+}
+.villa-door-panel.left  { left: 0;  transform-origin: left center; }
+.villa-door-panel.right { right: 0; transform-origin: right center; }
+.villa-door.open .villa-door-panel.left  { transform: rotateY(-108deg); }
+.villa-door.open .villa-door-panel.right { transform: rotateY(108deg); }
+
+/* ---------- landing dust ---------- */
+.pano-dust.villa {
+  top: 55%;
+  background: radial-gradient(ellipse at center,
+    rgba(214, 231, 203, 0.85) 0%,
+    rgba(214, 231, 203, 0) 68%);
+}
+
+/* the villas flow reuses body.is-pano to hide the map chrome;
+   #detail can never show during it, but keep it explicitly out */
+body.is-pano #detail { display: none; }
+
+@media (max-width: 760px) {
+  #villa-hint { font-size: 9.5px; letter-spacing: 0.12em; }
+  #villa-back { top: 16px; }
+  .villa-chip { font-size: 11.5px; padding: 8px 13px 8px 10px; }
+  .villa-nav-arrow span { width: 40px; height: 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #villa-hud { transition: none; }
+  .villa-nav-arrow span { animation: none; opacity: 0.8; }
+}

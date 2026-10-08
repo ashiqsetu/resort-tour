@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Palace Luxury Resort — 3D Tour</title>
+  <meta name="description" content="Interactive 3D map and guided tour of The Palace Luxury Resort." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Single-viewport 3D app; wheel = virtual scroll, no page scrollbar -->
+  <canvas id="scene" aria-label="Interactive 3D resort"></canvas>
+
+  <!-- Loading overlay -->
+  <div id="loader">
+    <p class="loader-eyebrow">The Palace Luxury Resort</p>
+    <h1 class="loader-title">Arriving…</h1>
+    <div class="loader-bar"><span id="loader-fill"></span></div>
+    <p id="loader-status">Preparing the island</p>
+  </div>
+
+  <!-- Projected 3D hotspots -->
+  <div id="pins"></div>
+
+  <!-- Map-mode HUD -->
+  <header id="hud">
+    <div class="hud-left">
+      <p class="hud-hint">Click any point to zoom in and explore</p>
+    </div>
+    <div class="hud-right">
+      <button id="btn-tour" class="btn-ghost">▶&nbsp; Play guided tour</button>
+    </div>
+  </header>
+
+  <!-- Tour progress bar + virtual-scroll hint -->
+  <div id="tour-bar"><span id="tour-fill"></span></div>
+  <p id="tour-hint">Guided tour playing</p>
+
+  <!-- Detail view -->
+  <section id="detail" aria-hidden="true">
+    <button id="detail-close" aria-label="Back to map">← Back to map</button>
+    <div id="detail-info">
+      <p class="eyebrow" id="detail-eyebrow">Location</p>
+      <h2 id="detail-name">—</h2>
+      <p id="detail-desc">—</p>
+      <div class="detail-meta">
+        <div><span class="meta-label">Highlights</span><span id="detail-highlights">—</span></div>
+        <div><span class="meta-label">Nearby</span><span id="detail-nearby">—</span></div>
+      </div>
+      <p class="detail-note">Drag to look around this area · Wheel to zoom · <b>Esc</b> to return</p>
+      <button id="btn-next" class="btn-solid">Next location →</button>
+    </div>
+  </section>
+
+  <!-- 360° Beach Club panorama HUD -->
+  <section id="pano-hud" aria-hidden="true">
+    <button id="pano-back" aria-label="Back to map">← Back to map</button>
+    <p id="pano-hint">Drag to look around · Wheel to zoom · <b>Esc</b> to return</p>
+  </section>
+
+  <!-- Villas walk-through video HUD -->
+  <section id="villa-hud" aria-hidden="true">
+    <button id="villa-back" aria-label="Back to map">← Back to map</button>
+    <p id="villa-hint">Click a direction point to walk there · Drag to look around · Wheel to zoom · <b>Esc</b> to return</p>
+  </section>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
